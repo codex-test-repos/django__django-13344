@@ -78,3 +78,21 @@ class MiddlewareMixinTests(SimpleTestCase):
 
         self.assertEqual(len(threads_and_connections), 4)
         self.assertEqual(len(set(threads_and_connections)), 1)
+
+    def test_process_response_receives_response_under_asgi(self):
+        async def get_response(request):
+            return HttpResponse()
+
+        class DummyMiddleware(MiddlewareMixin):
+            def __init__(self, get_response):
+                self.get_response = get_response
+
+            def process_response(self, request, response):
+                self.response_type = type(response)
+                return response
+
+        request = HttpRequest()
+        middleware = DummyMiddleware(get_response)
+        response = async_to_sync(middleware)(request)
+        self.assertIsInstance(response, HttpResponse)
+        self.assertIs(middleware.response_type, HttpResponse)

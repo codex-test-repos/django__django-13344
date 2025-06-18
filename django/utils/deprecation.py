@@ -108,6 +108,8 @@ class MiddlewareMixin:
             self._is_coroutine = asyncio.coroutines._is_coroutine
 
     def __call__(self, request):
+        if not hasattr(self, '_is_coroutine'):
+            self._async_check()
         # Exit out to async mode, if needed
         if asyncio.iscoroutinefunction(self.get_response):
             return self.__acall__(request)
